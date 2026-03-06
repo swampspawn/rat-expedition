@@ -33,9 +33,57 @@ func _physics_process(delta: float) -> void:
 		manage_chunk_tasks()
 ```
 2. In manage_chunk_tasks() checks for chunks that need to load and need to be deleted, and appends them to corresponding arrays.
+```gdscript
+func manage_chunk_tasks() -> void:
+	for x in range(0, LOAD_DISTANCE):
+		for v in [-1,1]: #for negative variants of chunk coords
+			var chunk_coord = x*v + player_chunk
+			
+			if not chunk_coord in loaded_chunks and not chunk_coord in chunk_load_queue:
+				chunk_load_queue.append(chunk_coord)
+		
+	for chunk_coord:int in loaded_chunks:
+		if abs(chunk_coord - player_chunk) > UNLOAD_DISTANCE and not chunk_coord in chunks_to_remove:
+			if loaded_chunks[chunk_coord].richness != Global.Chunk_default_richness:
+				Chunk_Richness.set(chunk_coord, loaded_chunks[chunk_coord].richness)
+			chunks_to_remove.append(chunk_coord)
+```
 3. Processes these tasks in execute_chunk_tasks(): loads and deletes if there are free task slots.
+```gdscript
+func execute_chunk_tasks() -> void:
+	for chunk_coord in chunks_to_remove:
+		loaded_chunks[chunk_coord].queue_free()
+		loaded_chunks.erase(chunk_coord)
+		chunks_to_remove.erase(chunk_coord)
+	if current_tasks < max_tasks and not chunk_load_queue.is_empty():
+		current_tasks += 1
+		var chunk_to_load:int = chunk_load_queue.pop_front()
+		load_chunk(chunk_to_load)
+```
 4. Remembers where loaded chunks are and how many resources were collected in each with richness dictionary.
+```gdscript
+func load_chunk(chunk_coord: int):
+	var new_chunk: World_Chunk = Regular_chunk_scene.instantiate()
+	add_child(new_chunk, true)
+	if Chunk_Richness.has(chunk_coord):
+		new_chunk.richness = Chunk_Richness[chunk_coord]
+	new_chunk.position.x = chunk_coord*Global.Chunk_size
+	new_chunk.chunk_floored_coordinate = chunk_coord
+	#new_chunk.check_particles()
+	loaded_chunks[chunk_coord] = new_chunk
+	new_chunk.get_node("Number").text = str(chunk_coord)
+	current_tasks -= 1
+	signal_chunk_transition()
+```
 5. It also emits a signal that player chunk has changed so each chunk can separately check if it has to draw collectibles multimesh.
+```gdscript
+func _physics_process(delta: float) -> void:
+	if player:
+		player_chunk = get_chunk_coord(player.global_position) + 1
+	if player_last_chunk != player_chunk:
+		player_last_chunk = player_chunk
+		signal_chunk_transition()
+```
 Overall it seems robust, as the array operations are comparatively fast and each array syncs with others to avoid unaccounted chunks (had this problem in the previous project).
 
 # Multimesh
