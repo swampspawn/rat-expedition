@@ -21,6 +21,16 @@ https://github.com/user-attachments/assets/15c69884-c1e8-44bf-8282-4d04443e4493
 
 One of the key features of gameplay is an endless street where the rat collects food. Naturally, the chunk system is a good way to do that. It works as such:
 1 Constantly checks if player changed chunk. If so, initiates manage_chunk_tasks().
+```gdscript
+func _physics_process(delta: float) -> void:
+	if player:
+		player_chunk = get_chunk_coord(player.global_position) + 1
+	if player_last_chunk != player_chunk:
+		player_last_chunk = player_chunk
+		signal_chunk_transition()
+		chunk_changed.emit
+		manage_chunk_tasks()
+```
 2 In manage_chunk_tasks() checks for chunks that need to load and need to be deleted, and appends them to corresponding arrays.
 3 Processes these tasks in execute_chunk_tasks(): loads and deletes if there are free task slots.
 4 Remembers where loaded chunks are and how many resources were collected in each with richness dictionary.
