@@ -8,11 +8,11 @@ A fun little game made completely from scratch in Blender, Godot and some other 
 
 # Tech features:
 * Chunk system
-...* Multimesh
-...* Texture atlas
-...* Animation tree
-...* Asset browser
-...* Custom shaders
+* Multimesh
+* Texture atlas
+* Animation tree
+* Asset browser
+* Custom shaders
 
 # Chunk system
 
