@@ -30,7 +30,7 @@ Overall it seems robust, as the array operations are comparatively fast and each
 # Multimesh
 As there can be many assets in chunk, a cool optimization technique is using multimesh - telling GPU to draw all instances at once instead of per-instance GPU->CPU communication. When loaded, each chunk checks the collectibles list in Global, then creates separate multimeshes and item groups with collisions for each chunk. Then, fetches random coordinates and item type and appends coordinates to a corresponding item array, while also creating collision items in scatter_objects():. Redraws with multimesh_redraw(), which places multimesh instance and collision item in the same spot. When the item is hit, it erases coordinates from mm array and redraws it. This systems allows drawing numerous collectibles cheaper, however, it is potentially subject to change in the future due to the fact that balancing the game might severely reduce the number of collectibles in a chunk. It might still be recycled for some kind of thrash-misc objects though.
 
-#Texture atlas
+# Texture atlas
 This optimization technique somewhat shares the principle with multimesh, but in regard to textures. Instead of storing 12 textures (albedo and normals per collectible), 
 
 # Asset browser
