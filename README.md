@@ -1,7 +1,7 @@
 # Rat Expedition
-PLAYABLE BUILD ON GITHUB PAGES: https://swampspawn.github.io/rat-expedition-web-build/
+PLAYABLE WEB BUILD ON GITHUB PAGES: https://swampspawn.github.io/rat-expedition-web-build/
 
-PLAYABLE BUILD ON ITCH.IO: https://swampspawn.itch.io/rat-expedition
+PLAYABLE WEB BUILD ON ITCH.IO: https://swampspawn.itch.io/rat-expedition
 
 # Summary
 A fun little game made completely from scratch in Blender, Godot and some other FOSS. First and foremost it's a portfolio game, so the focus at the early stage of development was firm techincal foundation. (Yet I can't leave it unfinished, so expect updates) It has an internal asset browser to check textures and wireframes, texture atlases, custom shaders and many more.
@@ -87,10 +87,63 @@ func _physics_process(delta: float) -> void:
 Overall it seems robust, as the array operations are comparatively fast and each array syncs with others to avoid unaccounted chunks (had this problem in the previous project).
 
 # Multimesh
-As there can be many assets in chunk, a cool optimization technique is using multimesh - telling GPU to draw all instances at once instead of per-instance GPU->CPU communication. When loaded, each chunk checks the collectibles list in Global, then creates separate multimeshes and item groups with collisions for each chunk. Then, fetches random coordinates and item type and appends coordinates to a corresponding item array, while also creating collision items in scatter_objects():. Redraws with multimesh_redraw(), which places multimesh instance and collision item in the same spot. When the item is hit, it erases coordinates from mm array and redraws it. This systems allows drawing numerous collectibles cheaper, however, it is potentially subject to change in the future due to the fact that balancing the game might severely reduce the number of collectibles in a chunk. It might still be recycled for some kind of thrash-misc objects though.
+As there can be many assets in chunk, a cool optimization technique is using multimesh - telling GPU to draw all instances at once instead of per-instance GPU->CPU communication. When loaded, each chunk checks the collectibles list in Global, then creates separate multimeshes and item groups with collisions for each chunk.
+```gdscript
+func _ready() -> void:
+	for item in Global.Collectibles:
+		var item_row = []
+		Multimesh_tasks.append(item_row)
+		var m_mesh = MultiMeshInstance3D.new()
+		$Multimeshes.add_child(m_mesh)
+		m_mesh.name = item.name
+		m_mesh.multimesh = MultiMesh.new()
+		m_mesh.multimesh.transform_format = MultiMesh.TRANSFORM_3D
+```
+Then, fetches random coordinates and item type and appends coordinates to a corresponding item array, while also creating collision items in scatter_objects()
+```gdscript
+func scatter_objects():
+	while (richness - spawned_richness) > 101:
+		var collectible_instance = Collectible_spawn.new()
+		collectible_instance.coords = vec2_random_pos(food_area)
+		collectible_instance.item_id = Global.item_pick()
+		Multimesh_tasks[collectible_instance.item_id].append(collectible_instance)
+		var item_collision = item_scene.instantiate()
+		$Item_areas.add_child(item_collision)
+		item_collision.item_id = collectible_instance.item_id
+		item_collision.position = collectible_instance.coords
+		item_collision.item_picked.connect(_on_item_item_picked)
+		spawned_richness += Global.Collectibles[collectible_instance.item_id].food_points
+```
+Redraws with multimesh_redraw(), which places multimesh instance and collision item in the same spot.
+```gdscript
+func multimesh_redraw():
+	var i:int = 0
+	for col_type in Multimesh_tasks:
+		var mm:MultiMeshInstance3D = get_node(str("Multimeshes/"+Global.Collectibles[i].name))
+		mm.multimesh.instance_count = col_type.size()
+		mm.multimesh.mesh = Global.Collectibles[i].mesh
+		var j:int = 0
+		for col in col_type:
+			mm.multimesh.set_instance_transform(j, Transform3D(Basis(), col.coords))
+			j += 1
+		i += 1
+```
+When the item is hit, it erases coordinates from mm array and redraws it.
+```gdscript
+func _on_item_item_picked(id: int, coords: Vector3) -> void:
+	for mminstance in Multimesh_tasks[id]:
+		if coords == mminstance.coords:
+			Multimesh_tasks[id].erase(mminstance)
+			Global.add_food_points(Global.Collectibles[id].food_points)
+			richness -= Global.Collectibles[id].food_points
+	multimesh_redraw()
+```
+This systems allows drawing numerous collectibles cheaper, however, it is potentially subject to change in the future due to the fact that balancing the game might severely reduce the number of collectibles in a chunk. It might still be recycled for some kind of thrash-misc objects though.
 
 # Texture atlas
-This optimization technique somewhat shares the principle with multimesh, but in regard to textures. Instead of storing 12 textures (albedo and normals per collectible), 
+This optimization technique somewhat shares the principle with multimesh, but in regard to textures. Instead of storing 12 textures (albedo and normals per collectible), all collectibles use the same 2 textures - for normal and albedo. The atlas was baked in Blender with all collectibles unwrapped simultaneously. This allows faster iterration (as the only thing you need to change to add new collectible is retopology UVs), utilizing atlas more effectively (as UVs can overlap and theres no need to allocate convex regions for collectible UVs), and storing less textures in memory (a general atlas bonus).
+<img width="1024" height="1024" alt="Collectibles_albedo" src="https://github.com/user-attachments/assets/8095a4de-662d-426b-8137-0df218ddae9c" />
+<img width="1024" height="1024" alt="Collectibles_normal" src="https://github.com/user-attachments/assets/70615f0c-dab7-431c-8efb-42f7e03d92d9" />
 
 # Asset browser
 Not only does it allow you to browse assets in different viewmodes to check textures, it also can show wireframe! To achieve that, once you've selected wireframe viewmode it tears the mesh apart with MeshDataTool, assigns barycentric coordinates for each face and assembles a new, de-indexed mesh. (meaning the mesh where no faces share vertices). Barycentric coodrinates are needed to establish whether a given fragment (pixel) is part of an edge (with configurable width) or not. The logic behind them is that every point in a triangle can be described by distances to the verts forming that triangle. If a distance from any point is more than some value, that means that the point is on the opposite edge from said vertex.  Coordinates are assigned during de-indexing for each vertex-face combinaton (one vertex in an indexed mesh contributes to more than one face) as a vertex color attribute, and then each combination is saved as a separate vertex (basically unique vertices for each face). Here, the logic of barycentric coordinates is inversed, though the principle stays the same: as they are coded in color attribute values, each channel actually describes the "closeness" to the according vertex. Afterwards the wireframe shader can finally function properly - for a given fragment if one of the three "closeness" values is less than width value, it means that the fragment is part of an edge (check in the asset inspector, the "green" edge is actually red-blue, as the green channel is near zero for all edge fragments)
