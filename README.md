@@ -207,5 +207,36 @@ void fragment() {
 # Custom shaders
 They are utilized not only for changing view modes in AB, but also for collectibles rotation, bobbing and emission. Skipping the more "standard" elements of reading textures using right UVs, for rotation and bobbing an actual matrice operation is needed, as the shader is completely oblivious to the existence of the whole object - it knows only one vertex at a time. Thus, if you want to rotate, you need to move, and matrice transform comes in handy. Skipping the cool math details, once you multiply a VERTEX vector by a matrice, you get a rotated variant of it. Once you add TIME (passed) as an argument, you get continious rotation. After adding said TIME once again, but simply to the VERTEX y element, you get a bobbing up-and-down effect. Use that same technique, but now multiply EMMISION taken from a negative normal map blue channel (which shows how much the region faces front) - and you get a glow only on sharper visual edges.
 
+```gdshader
+shader_type spatial;
+
+global uniform sampler2D collectibles_albedo : source_color;
+global uniform sampler2D collectibles_normal : hint_normal;
+global uniform float collectibles_rotate_speed;
+global uniform vec2 collectibles_bob;
+
+mat4 rotate_y(float theta) {
+    float c = cos(collectibles_rotate_speed * TIME);
+    float s = sin(collectibles_rotate_speed * TIME);
+    return mat4(
+        vec4(c, 0, -s, 0),
+        vec4(0, 1, 0, 0),
+        vec4(s, 0, c, 0),
+        vec4(0, 0, 0, 1)
+    );
+}
+
+void vertex() {
+	VERTEX = (vec4(VERTEX, 1.0) * rotate_y(1)).xyz;
+	VERTEX.y += cos(collectibles_bob.x*TIME)*collectibles_bob.y;
+}
+
+void fragment() {
+	ALBEDO = texture(collectibles_albedo, UV).rgb;
+	NORMAL_MAP = texture(collectibles_normal, UV).rgb;
+	EMISSION = texture(collectibles_albedo, UV).rgb * vec3(abs(sin(TIME*2.)), abs(sin(TIME*2.)), abs(sin(TIME*3.))) * (1. - texture(collectibles_normal, UV).b) * 8.;
+}
+```
+
 # Animation tree
 It is in a primitive state right now, purely for prototyping/planning for the future updates. Still, it already uses player speed\direction to blend between different walking animations :)
