@@ -142,11 +142,67 @@ This systems allows drawing numerous collectibles cheaper, however, it is potent
 
 # Texture atlas
 This optimization technique somewhat shares the principle with multimesh, but in regard to textures. Instead of storing 12 textures (albedo and normals per collectible), all collectibles use the same 2 textures - for normal and albedo. The atlas was baked in Blender with all collectibles unwrapped simultaneously. This allows faster iterration (as the only thing you need to change to add new collectible is retopology UVs), utilizing atlas more effectively (as UVs can overlap and theres no need to allocate convex regions for collectible UVs), and storing less textures in memory (a general atlas bonus).
+
+
 <img width="1024" height="1024" alt="Collectibles_albedo" src="https://github.com/user-attachments/assets/8095a4de-662d-426b-8137-0df218ddae9c" />
 <img width="1024" height="1024" alt="Collectibles_normal" src="https://github.com/user-attachments/assets/70615f0c-dab7-431c-8efb-42f7e03d92d9" />
 
 # Asset browser
-Not only does it allow you to browse assets in different viewmodes to check textures, it also can show wireframe! To achieve that, once you've selected wireframe viewmode it tears the mesh apart with MeshDataTool, assigns barycentric coordinates for each face and assembles a new, de-indexed mesh. (meaning the mesh where no faces share vertices). Barycentric coodrinates are needed to establish whether a given fragment (pixel) is part of an edge (with configurable width) or not. The logic behind them is that every point in a triangle can be described by distances to the verts forming that triangle. If a distance from any point is more than some value, that means that the point is on the opposite edge from said vertex.  Coordinates are assigned during de-indexing for each vertex-face combinaton (one vertex in an indexed mesh contributes to more than one face) as a vertex color attribute, and then each combination is saved as a separate vertex (basically unique vertices for each face). Here, the logic of barycentric coordinates is inversed, though the principle stays the same: as they are coded in color attribute values, each channel actually describes the "closeness" to the according vertex. Afterwards the wireframe shader can finally function properly - for a given fragment if one of the three "closeness" values is less than width value, it means that the fragment is part of an edge (check in the asset inspector, the "green" edge is actually red-blue, as the green channel is near zero for all edge fragments)
+Not only does it allow you to browse assets in different viewmodes to check textures, it also can show wireframe! To achieve that, once you've selected wireframe viewmode it tears the mesh apart with MeshDataTool, assigns barycentric coordinates for each face and assembles a new, de-indexed mesh. (meaning the mesh where no faces share vertices):
+```gdscript
+func wireframe_mesh(original_mesh: Mesh) -> ArrayMesh:
+	var face_count: int = 0
+	var vertex_count: int = 0
+	
+	var data_tool = MeshDataTool.new()
+	var surface_count = original_mesh.get_surface_count()
+	var new_mesh = ArrayMesh.new()
+	
+	
+	for s in range(surface_count):
+		data_tool.create_from_surface(original_mesh, s)
+
+		var verts = PackedVector3Array()
+		var colors = PackedColorArray()
+		var normals = PackedVector3Array()
+		
+		face_count += data_tool.get_face_count()
+		vertex_count += data_tool.get_vertex_count()
+		
+		for face in range(data_tool.get_face_count()):
+			for i in range(3):
+				var vertex_id = data_tool.get_face_vertex(face, i)
+				verts.append(data_tool.get_vertex(vertex_id))
+				normals.append(data_tool.get_vertex_normal(vertex_id))
+				
+				colors.append(Color(1,0,0) if i == 0 else (Color(0,1,0) if i == 1 else Color(0,0,1)))
+		
+		var arrays = []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = verts
+		arrays[Mesh.ARRAY_COLOR] = colors
+		arrays[Mesh.ARRAY_NORMAL] = normals
+		
+		new_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+```
+Barycentric coodrinates are needed to establish whether a given fragment (pixel) is part of an edge (with configurable width) or not. The logic behind them is that every point in a triangle can be described by distances to the verts forming that triangle. If a distance from any point is more than some value, that means that the point is on the opposite edge from said vertex.  Coordinates are assigned during de-indexing for each vertex-face combinaton (one vertex in an indexed mesh contributes to more than one face) as a vertex color attribute, and then each combination is saved as a separate vertex (basically unique vertices for each face). Here, the logic of barycentric coordinates is inversed, though the principle stays the same: as they are coded in color attribute values, each channel actually describes the "closeness" to the according vertex. Afterwards the wireframe shader can finally function properly - for a given fragment if one of the three "closeness" values is less than width value, it means that the fragment is part of an edge (check in the asset inspector, the "green" edge is actually red-blue, as the green channel is near zero for all edge fragments)
+
+```gdshader
+void fragment() {
+	if (view_mode == 0) {
+		ALBEDO = texture(asset_albedo, UV).rgb;
+		NORMAL_MAP = texture(asset_normal, UV).rgb;
+	} else if (view_mode == 1) {
+		ALBEDO = texture(asset_albedo, UV).rgb;
+	} else if (view_mode == 2) {
+		ALBEDO = texture(asset_normal, UV).rgb;
+	} else if (view_mode == 3) {
+    float is_edge = min(min(COLOR.r, COLOR.g), COLOR.b);
+    if (is_edge > width) discard;
+    ALBEDO = vec3(COLOR.rgb);
+	EMISSION = vec3(COLOR.rgb);
+}}
+```
 
 # Custom shaders
 They are utilized not only for changing view modes in AB, but also for collectibles rotation, bobbing and emission. Skipping the more "standard" elements of reading textures using right UVs, for rotation and bobbing an actual matrice operation is needed, as the shader is completely oblivious to the existence of the whole object - it knows only one vertex at a time. Thus, if you want to rotate, you need to move, and matrice transform comes in handy. Skipping the cool math details, once you multiply a VERTEX vector by a matrice, you get a rotated variant of it. Once you add TIME (passed) as an argument, you get continious rotation. After adding said TIME once again, but simply to the VERTEX y element, you get a bobbing up-and-down effect. Use that same technique, but now multiply EMMISION taken from a negative normal map blue channel (which shows how much the region faces front) - and you get a glow only on sharper visual edges.
