@@ -259,3 +259,6 @@ void fragment() {
 
 # Animation tree
 It is in a primitive state right now, purely for prototyping/planning for the future updates. Still, it already uses player speed\direction to blend between different walking animations :)
+
+## 3D pipeline
+
