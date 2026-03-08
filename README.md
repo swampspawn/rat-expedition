@@ -16,7 +16,7 @@ A fun little game made completely from scratch in Blender, Godot and some other 
   * [Custom shaders](#custom-shaders)
   * [Animation tree](#animation-tree)
 
-### Chunk system
+#### Chunk system
 
 https://github.com/user-attachments/assets/15c69884-c1e8-44bf-8282-4d04443e4493
 
@@ -88,7 +88,7 @@ func _physics_process(delta: float) -> void:
 ```
 Overall it seems robust, as the array operations are comparatively fast and each array syncs with others to avoid unaccounted chunks (had this problem in the previous project).
 
-# Multimesh
+#### Multimesh
 As there can be many assets in chunk, a cool optimization technique is using multimesh - telling GPU to draw all instances at once instead of per-instance GPU->CPU communication. When loaded, each chunk checks the collectibles list in Global, then creates separate multimeshes and item groups with collisions for each chunk.
 ```gdscript
 func _ready() -> void:
@@ -142,7 +142,7 @@ func _on_item_item_picked(id: int, coords: Vector3) -> void:
 ```
 This systems allows drawing numerous collectibles cheaper, however, it is potentially subject to change in the future due to the fact that balancing the game might severely reduce the number of collectibles in a chunk. It might still be recycled for some kind of thrash-misc objects though.
 
-# Texture atlas
+#### Texture atlas
 This optimization technique somewhat shares the principle with multimesh, but in regard to textures. Instead of storing 12 textures (albedo and normals per collectible), all collectibles use the same 2 textures - for normal and albedo. The atlas was baked in Blender with all collectibles unwrapped simultaneously. This allows faster iterration (as the only thing you need to change to add new collectible is retopology UVs), utilizing atlas more effectively (as UVs can overlap and theres no need to allocate convex regions for collectible UVs), and storing less textures in memory (a general atlas bonus).
 
 
@@ -151,7 +151,7 @@ This optimization technique somewhat shares the principle with multimesh, but in
 
 
 
-# Asset browser
+#### Asset browser
 Not only does it allow you to browse assets in different viewmodes to check textures, it also can show wireframe! To achieve that, once you've selected wireframe viewmode it tears the mesh apart with MeshDataTool, assigns barycentric coordinates for each face and assembles a new, de-indexed mesh. (meaning the mesh where no faces share vertices):
 ```gdscript
 func wireframe_mesh(original_mesh: Mesh) -> ArrayMesh:
@@ -208,7 +208,7 @@ void fragment() {
 }}
 ```
 
-# Custom shaders
+#### Custom shaders
 They are utilized not only for changing view modes in AB, but also for collectibles rotation, bobbing and emission. Skipping the more "standard" elements of reading textures using right UVs, for rotation and bobbing an actual matrice operation is needed, as the shader is completely oblivious to the existence of the whole object - it knows only one vertex at a time. Thus, if you want to rotate, you need to move, and matrice transform comes in handy. Skipping the cool math details, once you multiply a VERTEX vector by a matrice, you get a rotated variant of it. Once you add TIME (passed) as an argument, you get continious rotation. After adding said TIME once again, but simply to the VERTEX y element, you get a bobbing up-and-down effect. Use that same technique, but now multiply EMMISION taken from a negative normal map blue channel (which shows how much the region faces front) - and you get a glow only on sharper visual edges.
 
 ```gdshader
