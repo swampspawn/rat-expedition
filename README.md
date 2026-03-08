@@ -10,7 +10,7 @@ A fun little game made completely from scratch in Blender, Godot and some other 
 
 <details>
 	
-<summary> ## Table of contents</summary>
+## <summary>Table of contents</summary>
 
 * Tech features:
   * [Chunk system](#chunk-system)
