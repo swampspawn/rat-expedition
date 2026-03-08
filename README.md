@@ -23,6 +23,9 @@ A fun little game made completely from scratch in Blender, Godot and some other 
   * Finishing texturing touches (Blender with Ucupaint)
   * Implementation (Godot)
 
+## Tech features
+There are a couple of optimization and procedural techniques that went into the game. Mostly they concern reducing draw calls, tracking procedural parts of the game for balancing purposes and proper asset presentation in-game.
+
 #### Chunk system
 
 https://github.com/user-attachments/assets/15c69884-c1e8-44bf-8282-4d04443e4493
