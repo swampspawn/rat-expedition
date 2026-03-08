@@ -8,6 +8,7 @@ PLAYABLE WEB BUILD ON ITCH.IO: https://swampspawn.itch.io/rat-expedition
 ## Summary
 A fun little game made completely from scratch in Blender, Godot and some other FOSS. First and foremost it's a portfolio game, so the focus at the early stage of development was firm techincal foundation. (Yet I can't leave it unfinished, so expect updates) It has an internal asset browser to check textures and wireframes, texture atlases, custom shaders and many more.
 
+## Table of contents
 * Tech features:
   * [Chunk system](#chunk-system)
   * [Multimesh](#multimesh)
@@ -15,6 +16,12 @@ A fun little game made completely from scratch in Blender, Godot and some other 
   * [Asset browser](#asset-browser)
   * [Custom shaders](#custom-shaders)
   * [Animation tree](#animation-tree)
+* 3D pipeline:
+  * Concept & Academic Foundation
+  * Modelling and sculpting (Blender)
+  * Baking atlas (Blender)
+  * Finishing texturing touches (Blender with Ucupaint)
+  * Implementation (Godot)
 
 #### Chunk system
 
