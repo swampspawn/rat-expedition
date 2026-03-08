@@ -1,4 +1,4 @@
-Link to the sample section: [Link Text](#sample-section).
+
 
 # Rat Expedition
 PLAYABLE WEB BUILD ON GITHUB PAGES: https://swampspawn.github.io/rat-expedition-web-build/
@@ -150,7 +150,7 @@ This optimization technique somewhat shares the principle with multimesh, but in
 <img width="1024" height="1024" alt="Collectibles_normal" src="https://github.com/user-attachments/assets/70615f0c-dab7-431c-8efb-42f7e03d92d9" />
 
 
-# Sample section
+
 # Asset browser
 Not only does it allow you to browse assets in different viewmodes to check textures, it also can show wireframe! To achieve that, once you've selected wireframe viewmode it tears the mesh apart with MeshDataTool, assigns barycentric coordinates for each face and assembles a new, de-indexed mesh. (meaning the mesh where no faces share vertices):
 ```gdscript
