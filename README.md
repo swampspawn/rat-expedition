@@ -9,6 +9,7 @@ PLAYABLE WEB BUILD ON ITCH.IO: https://swampspawn.itch.io/rat-expedition
 Gleb Belogurov: Solely responsible for all programming and system architecture. Developed custom Godot/Blender tools for the project. Modeled and textured the main character (The Rat). 
 [Cara portfolio](https://cara.app/swampspawn/all) 
 [LinkedIn](https://www.linkedin.com/in/gleb-belogurov-1a9602273/)
+
 Vera Belogurova: Established the artistic vision and visual style. Modeled all environmental assets and props. Co-designed gameplay framework and mechanics.
 [Cara portfolio](https://cara.app/vera225)
 
