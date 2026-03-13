@@ -6,9 +6,11 @@ PLAYABLE WEB BUILD ON GITHUB PAGES: https://swampspawn.github.io/rat-expedition-
 PLAYABLE WEB BUILD ON ITCH.IO: https://swampspawn.itch.io/rat-expedition
 
 ## Credits
-Gleb Belogurov: Solely responsible for all programming and system architecture. Developed custom Godot/Blender tools for the project. Modeled and textured the main character (The Rat). [Cara portfolio](#https://cara.app/swampspawn/all) [LinkedIn](#https://www.linkedin.com/in/gleb-belogurov-1a9602273/)
+Gleb Belogurov: Solely responsible for all programming and system architecture. Developed custom Godot/Blender tools for the project. Modeled and textured the main character (The Rat). 
+[Cara portfolio](https://cara.app/swampspawn/all) 
+[LinkedIn](https://www.linkedin.com/in/gleb-belogurov-1a9602273/)
 Vera Belogurova: Established the artistic vision and visual style. Modeled all environmental assets and props. Co-designed gameplay framework and mechanics.
-[Cara portfolio](#https://cara.app/vera225)
+[Cara portfolio](https://cara.app/vera225)
 
 ## Summary
 A high-performance technical showcase developed from the ground up using Blender and Godot. While designed as a portfolio piece to demonstrate a robust technical foundation, it is an active project with a roadmap for gameplay expansion. Features include a custom chunk-loading system, internal asset debugging tools, and optimized PBR pipelines.
