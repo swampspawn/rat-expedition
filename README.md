@@ -5,8 +5,13 @@ PLAYABLE WEB BUILD ON GITHUB PAGES: https://swampspawn.github.io/rat-expedition-
 
 PLAYABLE WEB BUILD ON ITCH.IO: https://swampspawn.itch.io/rat-expedition
 
+## Credits
+Gleb Belogurov: Solely responsible for all programming and system architecture. Developed custom Godot/Blender tools for the project. Modeled and textured the main character (The Rat). [Cara portfolio](#https://cara.app/swampspawn/all) [LinkedIn](#https://www.linkedin.com/in/gleb-belogurov-1a9602273/)
+Vera Belogurova: Established the artistic vision and visual style. Modeled all environmental assets and props. Co-designed gameplay framework and mechanics.
+[Cara portfolio](#https://cara.app/vera225)
+
 ## Summary
-A fun little game made completely from scratch in Blender, Godot and some other FOSS. First and foremost it's a portfolio game, so the focus at the early stage of development was firm techincal foundation. (Yet I can't leave it unfinished, so expect updates) It has an internal asset browser to check textures and wireframes, texture atlases, custom shaders and many more.
+A high-performance technical showcase developed from the ground up using Blender and Godot. While designed as a portfolio piece to demonstrate a robust technical foundation, it is an active project with a roadmap for gameplay expansion. Features include a custom chunk-loading system, internal asset debugging tools, and optimized PBR pipelines.
 
 
 	
@@ -22,7 +27,7 @@ A fun little game made completely from scratch in Blender, Godot and some other 
 * 3D pipeline:
   * Concept & Academic Foundation
   * Modelling and sculpting (Blender)
-  * Baking atlas (Blender)
+  * Atlas Packing & Baking (Blender)
   * Finishing texturing touches (Blender with Ucupaint)
   * Implementation (Godot)
 
@@ -92,7 +97,7 @@ func load_chunk(chunk_coord: int):
 	current_tasks -= 1
 	signal_chunk_transition()
 ```
-5. It also emits a signal that player chunk has changed so each chunk can separately check if it has to draw collectibles multimesh.
+5. The system utilizes Signal-driven architecture to notify chunks of player transitions, allowing for independent visibility culling of multimesh instances.
 ```gdscript
 func _physics_process(delta: float) -> void:
 	if player:
@@ -155,7 +160,7 @@ func _on_item_item_picked(id: int, coords: Vector3) -> void:
 			richness -= Global.Collectibles[id].food_points
 	multimesh_redraw()
 ```
-This systems allows drawing numerous collectibles cheaper, however, it is potentially subject to change in the future due to the fact that balancing the game might severely reduce the number of collectibles in a chunk. It might still be recycled for some kind of thrash-misc objects though.
+This systems allows drawing numerous collectibles cheaper, however, it is potentially subject to change in the future due to the fact that balancing the game might severely reduce the number of collectibles in a chunk. It might still be recycled for some kind of environmental clutter/debris though.
 
 #### Texture atlas
 This optimization technique somewhat shares the principle with multimesh, but in regard to textures. Instead of storing 12 textures (albedo and normals per collectible), all collectibles use the same 2 textures - for normal and albedo. The atlas was baked in Blender with all collectibles unwrapped simultaneously. This allows faster iterration (as the only thing you need to change to add new collectible is retopology UVs), utilizing atlas more effectively (as UVs can overlap and theres no need to allocate convex regions for collectible UVs), and storing less textures in memory (a general atlas bonus).
@@ -167,7 +172,7 @@ This optimization technique somewhat shares the principle with multimesh, but in
 
 
 #### Asset browser
-Not only does it allow you to browse assets in different viewmodes to check textures, it also can show wireframe! To achieve that, once you've selected wireframe viewmode it tears the mesh apart with MeshDataTool, assigns barycentric coordinates for each face and assembles a new, de-indexed mesh. (meaning the mesh where no faces share vertices):
+Not only does it allow you to browse assets in different viewmodes to check textures, it also can show wireframe! To achieve that, once you've selected wireframe viewmode it proceduraly decomposes the mesh with MeshDataTool, assigns barycentric coordinates for each face and assembles a new, de-indexed mesh. (meaning the mesh where no faces share vertices):
 ```gdscript
 func wireframe_mesh(original_mesh: Mesh) -> ArrayMesh:
 	var face_count: int = 0
@@ -261,4 +266,9 @@ void fragment() {
 It is in a primitive state right now, purely for prototyping/planning for the future updates. Still, it already uses player speed\direction to blend between different walking animations :)
 
 ## 3D pipeline
+
+## Future roadmap
+Gameplay Systems: Implementation of a core gameplay loop including resource management and hazards.
+AI/NPCs: Integration of pathfinding-based entities.
+Expanded Biomes: New procedural chunk variations using the existing framework.
 
